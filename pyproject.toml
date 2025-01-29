@@ -1,0 +1,20 @@
+[project]
+name = "gran-turismo-telemetry-collector"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "qpep3b"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic (>=2.10.6,<3.0.0)",
+    "salsa20 (>=0.3.0,<0.4.0)",
+    "pandas (>=2.2.3,<3.0.0)",
+    "matplotlib (>=3.10.0,<4.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
