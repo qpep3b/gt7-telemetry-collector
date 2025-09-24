@@ -1,9 +1,8 @@
 from typing import Optional
 from src.schema.telemetry import TelemetryStat
-import os
-from datetime import datetime
 
 from src.services.lap import LapTracker
+from src.storage import Storage
 
 
 class RaceTracker:
@@ -37,17 +36,19 @@ class RaceTracker:
         
         self._prev_event = event
     
-    def _save_dump(self):
-        save_time = datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
-        # dirname = f"results/{save_time}"
-        dirname = "tracks/catalunya/grand-prix"
-
-        os.makedirs(dirname, exist_ok=True)
+    def _save_dump(self, db: Storage):
+        best_lap_time = min([x.lap_time() for x in self.laps])
+        race_id = db.create_session(
+            car_id=5,
+            best_lap_time=best_lap_time
+        )
+        dirname = f".run/storage/_data/{race_id}"
 
         for i, lap in enumerate(self.laps):
             lap.dump(dirname, i+1)
+            db.save_lap(i+1, race_id, lap.lap_time())
     
-    def finish(self):
+    def finish(self, db: Storage):
         self.laps[-1].finish()
-        return self._save_dump()
+        return self._save_dump(db)
     

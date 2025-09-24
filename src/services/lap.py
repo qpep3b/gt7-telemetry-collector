@@ -11,8 +11,16 @@ class LapTracker:
         self.stats.append(event)
     
     def finish(self):
+        """
+        !!!TODO!!!
+        # Adapted from https://www.gtplanet.net/forum/threads/gt7-is-compatible-with-motion-rig.410728/post-13810797
+        self.current_lap.lap_live_time = (self.current_lap.lap_ticks * 1. / 60.) - (self.session.special_packet_time / 1000.)
+        """
         lap_time = self.stats[-1].time_on_track - self.stats[0].time_on_track
         # print(f"LAP END IN {lap_time}")
+    
+    def lap_time(self):
+        return self.stats[-1].time_on_track - self.stats[0].time_on_track
     
     def dump(self, dirname: str, idx: int):
         lap_label = f'lap_{idx}'

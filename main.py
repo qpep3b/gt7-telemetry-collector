@@ -1,19 +1,14 @@
 from src.receivers.gt7 import GT7Receiver
-import sqlite3
 
 from src.services.tracker import Tracker
-import time
+from src.storage import Storage
 
 PS_IP = '192.168.1.27'
 PS_PORT = 33740
 
-# db = sqlite3.connect('.run/db.sqlite')
-# cursor = db.cursor()
-# cursor.execute("""
-
-# """)
-
-tracker = Tracker()
+tracker = Tracker(
+    db=Storage(verbose=True)
+)
 
 receiver = GT7Receiver(PS_IP, PS_PORT)
 for event in receiver.stream_events():
