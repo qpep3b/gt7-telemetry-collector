@@ -1,7 +1,10 @@
+from time import time
 from typing import Any
 from pydantic import BaseModel
 import struct
 from datetime import timedelta
+
+from src.utils.math import dist_between
 
 
 class TelemetryStat(BaseModel):
@@ -19,16 +22,25 @@ class TelemetryStat(BaseModel):
     current_position: int
     total_racers: int
 
-    rpm: int
+    rpm: float
 
     throttle_rate: int
     brake_rate: int
 
     x: float
     y: float
+    z: float
+
+    time_on_track: float
+    lap_distance: float
+
+    best_lap: float
+    last_lap: float
+
+    in_race: bool
 
     @classmethod
-    def from_bytes(cls, ddata: bytes) -> 'TelemetryStat | None':
+    def from_bytes(cls, ddata: bytes, prev_event: 'TelemetryStat | None') -> 'TelemetryStat | None':
         package_id = struct.unpack('i', ddata[0x70:0x70 + 4])[0]
         best_lap = struct.unpack('i', ddata[0x78:0x78 + 4])[0]
         last_lap = struct.unpack('i', ddata[0x7C:0x7C + 4])[0]
@@ -61,8 +73,7 @@ class TelemetryStat(BaseModel):
             tyre_slip_ratio_RL = '{:6.2f}'.format(type_speed_RL / car_speed)
             tyre_slip_ratio_RR = '{:6.2f}'.format(tyre_speed_RR / car_speed)
 
-        time_on_track = timedelta(
-            seconds=round(struct.unpack('i', ddata[0x80:0x80 + 4])[0] / 1000))  # time of day on track
+        time_on_track = struct.unpack('i', ddata[0x80:0x80 + 4])[0]  # time of day on track
 
         total_laps = struct.unpack('h', ddata[0x76:0x76 + 2])[0]  # total laps
 
@@ -118,7 +129,7 @@ class TelemetryStat(BaseModel):
 
         position_x = struct.unpack('f', ddata[0x04:0x04 + 4])[0]  # pos X
         position_y = struct.unpack('f', ddata[0x08:0x08 + 4])[0]  # pos Y
-        position_z = struct.unpack('f', ddata[0x0C:0x0C + 4])[0]  # pos Z
+        position_z = -struct.unpack('f', ddata[0x0C:0x0C + 4])[0]  # pos Z
 
         velocity_x = struct.unpack('f', ddata[0x10:0x10 + 4])[0]  # velocity X
         velocity_y = struct.unpack('f', ddata[0x14:0x14 + 4])[0]  # velocity Y
@@ -135,6 +146,11 @@ class TelemetryStat(BaseModel):
         is_paused = bin(struct.unpack('B', ddata[0x8E:0x8E + 1])[0])[-2] == '1'
         in_race = bin(struct.unpack('B', ddata[0x8E:0x8E + 1])[0])[-1] == '1'
 
+        lap_distance = 0 if prev_event is None or current_lap != prev_event.current_lap else prev_event.lap_distance + dist_between(
+            prev_event.x, prev_event.y, prev_event.z,
+            position_x, position_z, position_y
+        )
+
         return cls(
             package_id=package_id,
             current_lap=current_lap,
@@ -149,4 +165,10 @@ class TelemetryStat(BaseModel):
             brake_rate=int(brake),
             x=position_x,
             y=position_z,
+            z=position_y,
+            time_on_track=time_on_track,
+            lap_distance=lap_distance,
+            best_lap=best_lap,
+            last_lap=last_lap,
+            in_race=in_race,
         )

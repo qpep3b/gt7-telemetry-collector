@@ -11,25 +11,34 @@ class Tracker:
         self.prev_event: Optional[TelemetryStat] = None
     
     def _is_race_started(self, event: TelemetryStat) -> bool:
-        if event.current_lap == 1 and not self.race_tracker and event.current_position > -1:
+        if self.race_tracker: return False
+
+        if event.total_racers > 0 and event.current_position > 0 and (self.prev_event is None or self.prev_event.current_position < -1 and self.prev_event.current_lap <= 0) and event.current_lap > 0:
             return True
         
         return False
     
     def process_event(self, d_event: bytes):
-        event = TelemetryStat.from_bytes(d_event)
+        event = TelemetryStat.from_bytes(d_event, self.prev_event)
         if event:
-            if self.race_tracker:
-                if event.current_lap > event.total_laps:
-                    self.race_tracker.finish()
-                    self.race_tracker = None
-                    return
-            else:
-                if self._is_race_started(event):
-                    self.race_tracker = RaceTracker()
+            if self._is_race_started(event):
+                print("started")
+                # print('CUR', event.dict())
+                # print('PREV', self.prev_event.dict() if self.prev_event else None)
+                self.race_tracker = RaceTracker()
+            if not self.race_tracker:
+                return
             
-            self.race_tracker.process_event(event)            
-            self.prev_event = event
 
-            return
+            if (event.total_racers == -1 and self.prev_event is not None and self.prev_event.total_racers > 0) or event.current_lap > event.total_laps:
+                print("FINISH")
+                self.race_tracker.finish()
+                self.race_tracker = None
+                self.prev_event = None
+                return
+            
+            self.race_tracker.process_event(event)
+
+            self.prev_event = event
+            
     

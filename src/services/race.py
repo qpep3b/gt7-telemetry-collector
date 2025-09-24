@@ -2,8 +2,6 @@ from typing import Optional
 from src.schema.telemetry import TelemetryStat
 import os
 from datetime import datetime
-import pandas as pd
-import time
 
 from src.services.lap import LapTracker
 
@@ -11,17 +9,19 @@ from src.services.lap import LapTracker
 class RaceTracker:
     def __init__(self):
         self.max_speed = -1
-        self._start_time = time.time()
         self.cur_lap_idx = -1
         self.laps: list[LapTracker] = []
 
         self._prev_event: Optional[TelemetryStat] = None
     
     def _is_new_lap(self, event: TelemetryStat) -> bool:
+        if event.current_lap > event.total_laps:
+            return False
+
         if self._prev_event is None:
             return True
         
-        if event.current_lap > self._prev_event.current_lap:
+        if event.current_lap > self._prev_event.current_lap and event.current_lap <= event.total_laps:
             return True
         
         return False
@@ -39,24 +39,13 @@ class RaceTracker:
     
     def _save_dump(self):
         save_time = datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
-        dirname = f"results/{save_time}"
-        os.makedirs(dirname)
+        # dirname = f"results/{save_time}"
+        dirname = "tracks/catalunya/grand-prix"
 
-        for i in range(len(self.laps)):
-            lap_label = f'lap_{i+1}'
-            df = pd.DataFrame(
-                [(
-                    item.current_gear,
-                    item.speed,
-                    item.rpm,
-                    item.throttle_rate,
-                    item.brake_rate,
-                    item.x,
-                    item.y,
-                ) for item in self.laps[i].stats],
-                columns=['gear', 'speed', 'rpm', 'throttle', 'brake', 'x', 'y']
-            )
-            df.to_csv(f"{dirname}/{lap_label}.csv")
+        os.makedirs(dirname, exist_ok=True)
+
+        for i, lap in enumerate(self.laps):
+            lap.dump(dirname, i+1)
     
     def finish(self):
         self.laps[-1].finish()
