@@ -5,22 +5,21 @@ import pandas as pd
 class LapTracker:
     def __init__(self):
         self.stats: list[TelemetryStat] = []
-        # print("LAP START")
+        self._lap_time = None
     
     def process_event(self, event: TelemetryStat):
         self.stats.append(event)
     
-    def finish(self):
+    def finish(self, lap_time: int):
         """
         !!!TODO!!!
         # Adapted from https://www.gtplanet.net/forum/threads/gt7-is-compatible-with-motion-rig.410728/post-13810797
         self.current_lap.lap_live_time = (self.current_lap.lap_ticks * 1. / 60.) - (self.session.special_packet_time / 1000.)
         """
-        lap_time = self.stats[-1].time_on_track - self.stats[0].time_on_track
-        # print(f"LAP END IN {lap_time}")
+        self._lap_time = lap_time
     
     def lap_time(self):
-        return self.stats[-1].time_on_track - self.stats[0].time_on_track
+        return self._lap_time
     
     def dump(self, dirname: str, idx: int):
         lap_label = f'lap_{idx}'

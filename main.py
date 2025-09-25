@@ -7,7 +7,7 @@ PS_IP = '192.168.1.27'
 PS_PORT = 33740
 
 tracker = Tracker(
-    db=Storage(verbose=True)
+    db=Storage(verbose=True),
 )
 
 receiver = GT7Receiver(PS_IP, PS_PORT)

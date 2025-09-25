@@ -38,6 +38,7 @@ class TelemetryStat(BaseModel):
     last_lap: float
 
     in_race: bool
+    car_id: int
 
     @classmethod
     def from_bytes(cls, ddata: bytes, prev_event: 'TelemetryStat | None') -> 'TelemetryStat | None':
@@ -171,4 +172,5 @@ class TelemetryStat(BaseModel):
             best_lap=best_lap,
             last_lap=last_lap,
             in_race=in_race,
+            car_id=int(car_id),
         )

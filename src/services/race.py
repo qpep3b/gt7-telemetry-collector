@@ -10,10 +10,16 @@ class RaceTracker:
         self.max_speed = -1
         self.cur_lap_idx = -1
         self.laps: list[LapTracker] = []
+        self.car_id: Optional[int] = None
+        self.special_packet_time = 0.0
 
         self._prev_event: Optional[TelemetryStat] = None
+        self._best_lap = None
     
     def _is_new_lap(self, event: TelemetryStat) -> bool:
+        if event.current_lap <= 0:
+            return False
+
         if event.current_lap > event.total_laps:
             return False
 
@@ -26,29 +32,35 @@ class RaceTracker:
         return False
 
     def process_event(self, event: TelemetryStat):
+        if self.car_id is None:
+            self.car_id = event.car_id
+
+        if len(self.laps) == 0:
+            self.special_packet_time = 0
+
         if self._is_new_lap(event):
-            if len(self.laps):
-                self.laps[-1].finish()
+            self.special_packet_time += event.last_lap - len(self.laps) * 1000 / 60
+            if self.laps:
+                self.laps[-1].finish(event.last_lap)
             
             self.laps.append(LapTracker())
         
-        self.laps[-1].process_event(event)
-        
-        self._prev_event = event
+        if event.current_lap > 0 and self.laps:
+            self.laps[-1].process_event(event)
+            self._prev_event = event
     
     def _save_dump(self, db: Storage):
-        best_lap_time = min([x.lap_time() for x in self.laps])
-        race_id = db.create_session(
+        race_id, race_folder = db.create_session(
             car_id=5,
-            best_lap_time=best_lap_time
+            best_lap_time=self._best_lap
         )
-        dirname = f".run/storage/_data/{race_id}"
 
         for i, lap in enumerate(self.laps):
-            lap.dump(dirname, i+1)
+            lap.dump(race_folder, i+1)
             db.save_lap(i+1, race_id, lap.lap_time())
-    
-    def finish(self, db: Storage):
-        self.laps[-1].finish()
+
+    def finish(self, db: Storage, event: TelemetryStat):
+        self.laps[-1].finish(event.last_lap)
+        self._best_lap = event.best_lap
         return self._save_dump(db)
     
