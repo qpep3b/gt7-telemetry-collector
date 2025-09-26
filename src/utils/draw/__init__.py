@@ -1,5 +1,5 @@
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 def draw_track(name: str):
@@ -10,13 +10,13 @@ def draw_track(name: str):
 
     # if name == 'interlagos':
     #     plt.figure(figsize=(8, 10))
-    
+
     # elif name == 'spa':
     #     plt.figure(figsize=(10, 20))
 
     plt.plot(inner["x"], inner["y"], color="black")
     plt.plot(outer["x"], outer["y"], color="black")
-    
+
     x_min, x_max, y_min, y_max = plt.axis()
 
     delta_x = x_max - x_min

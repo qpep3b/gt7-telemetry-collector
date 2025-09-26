@@ -1,5 +1,7 @@
 from typing import Optional
-from sqlmodel import Field, SQLModel, create_engine, Column, String
+
+from sqlmodel import Column, Field, SQLModel, String
+
 
 class Car(SQLModel, table=True):
     __tablename__ = "cars"
@@ -30,7 +32,7 @@ class Race(SQLModel, table=True):
 
     id: str = Field(primary_key=True)
     track_id: Optional[int] = Field(nullable=True, default=None)
-    car_id: int 
+    car_id: int
     racer: Optional[str] = Field(nullable=True, default=None)
     best_lap_time: int
     end_ts: int

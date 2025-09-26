@@ -1,9 +1,8 @@
 from src.receivers.gt7 import GT7Receiver
-
 from src.services.tracker import Tracker
 from src.storage import Storage
 
-PS_IP = '192.168.1.27'
+PS_IP = "192.168.1.27"
 PS_PORT = 33740
 
 tracker = Tracker(

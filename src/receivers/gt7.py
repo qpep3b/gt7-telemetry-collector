@@ -1,7 +1,9 @@
-from typing import Iterator, Optional
-from src.receivers.base import BaseReceiver
-from salsa20 import Salsa20_xor
 import socket
+from typing import Iterator, Optional
+
+from salsa20 import Salsa20_xor  # type: ignore
+
+from src.receivers.base import BaseReceiver
 
 
 class GT7Receiver(BaseReceiver):
@@ -14,32 +16,34 @@ class GT7Receiver(BaseReceiver):
         self._heartbeat_port = 33739
 
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self._socket.bind(('0.0.0.0', self._port))
+        self._socket.bind(("0.0.0.0", self._port))
         self._socket.settimeout(2)
-        print('CONNECTED')
-    
+        print("CONNECTED")
+
     def decode_msg(self, data: bytes) -> Optional[bytes]:
-        KEY = b'Simulator Interface Packet GT7 ver 0.0'
+        KEY = b"Simulator Interface Packet GT7 ver 0.0"
         # Seed IV is always located here
         oiv = data[0x40:0x44]
-        iv1 = int.from_bytes(oiv, byteorder='little')
+        iv1 = int.from_bytes(oiv, byteorder="little")
         # Notice DEADBEAF, not DEADBEEF
         iv2 = iv1 ^ 0xDEADBEAF
         IV = bytearray()
-        IV.extend(iv2.to_bytes(4, 'little'))
-        IV.extend(iv1.to_bytes(4, 'little'))
+        IV.extend(iv2.to_bytes(4, "little"))
+        IV.extend(iv1.to_bytes(4, "little"))
         ddata = Salsa20_xor(data, bytes(IV), KEY[0:32])
-        magic = int.from_bytes(ddata[0:4], byteorder='little')
+        magic = int.from_bytes(ddata[0:4], byteorder="little")
         if magic != 0x47375330:
             return None
 
         return ddata
-    
+
     def stream_events(self) -> Iterator[bytes]:
         def send_heartbeat():
-            send_data = 'A'
-            self._socket.sendto(send_data.encode('utf-8'), (self._ip, self._heartbeat_port))
-        
+            send_data = "A"
+            self._socket.sendto(
+                send_data.encode("utf-8"), (self._ip, self._heartbeat_port)
+            )
+
         pkgcnt = 0
         while True:
             try:
@@ -55,6 +59,6 @@ class GT7Receiver(BaseReceiver):
                 if pkgcnt > 100:
                     send_heartbeat()
                     pkgcnt = 0
-            except Exception as e:
+            except Exception:
                 send_heartbeat()
                 pkgcnt = 0
