@@ -4,6 +4,17 @@ start:
 graphs:
 	poetry run python graphs.py
 
+migrate:
+	poetry run alembic upgrade head
+
+install:
+	poetry install
+	mkdir -p .run/storage/_data
+	make migrate
+
+test:
+	poetry run pytest -s tests/
+
 format:
 	poetry run ruff format src/ tests/ main.py web.py
 
