@@ -1,5 +1,5 @@
-from fastapi import Depends, FastAPI
-from sqlmodel import Session, create_engine, asc, desc, select
+from fastapi import Depends, FastAPI, Query
+from sqlmodel import Session, asc, col, create_engine, desc, select
 
 from src.domain.models import Car, Lap, Race, Track
 
@@ -18,8 +18,11 @@ app = FastAPI()
 
 
 @app.get("/tracks")
-def get_tracks_list(db: Session = Depends(get_db)):
+def get_tracks_list(db: Session = Depends(get_db), q: str = Query()):
     query = select(Track).order_by(asc(Track.name))
+    if q:
+        query = query.where(col(Track.name).contains(q))
+
     res = db.execute(query).scalars().all()
     return res
 

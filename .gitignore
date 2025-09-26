@@ -9,3 +9,4 @@ images/
 .run/
 .coverage
 .test/
+graphs.py

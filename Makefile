@@ -1,6 +1,9 @@
 start:
 	poetry run python main.py
 
+web:
+	poetry run uvicorn web:app --reload
+
 graphs:
 	poetry run python graphs.py
 
