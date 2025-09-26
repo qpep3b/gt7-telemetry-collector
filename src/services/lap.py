@@ -4,6 +4,7 @@ import pandas as pd
 
 class LapTracker:
     def __init__(self):
+        print("LAP STARTED")
         self.stats: list[TelemetryStat] = []
         self._lap_time = None
     
